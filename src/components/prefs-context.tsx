@@ -15,6 +15,22 @@ interface PrefsCtx {
 
 const Ctx = createContext<PrefsCtx | null>(null);
 
+// This device's latest preferences — the serverless write layer is per-instance
+// ephemeral, so the browser keeps an authoritative mirror across restarts.
+const LSPREFS = "piu.prefs";
+
+/** overlay values win; arrays replace; objects merge one level deep. */
+function deepMerge(base: any, overlay: any): any {
+  if (overlay === undefined) return base;
+  if (Array.isArray(overlay)) return overlay;
+  if (overlay && typeof overlay === "object" && base && typeof base === "object") {
+    const out: any = { ...base };
+    for (const k of Object.keys(overlay)) out[k] = deepMerge(base[k], overlay[k]);
+    return out;
+  }
+  return overlay;
+}
+
 export function usePrefs(): PrefsCtx {
   const c = useContext(Ctx);
   if (!c) throw new Error("usePrefs outside provider");
@@ -34,10 +50,19 @@ export function PrefsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetch("/api/prefs").then((r) => r.json()).then((p) => {
-      setPrefs(p);
-      // cache appearance for the pre-paint script
-      localStorage.setItem("piu.appearance", JSON.stringify((p as any).appearance ?? {}));
-    });
+      let merged = p;
+      try {
+        const local = JSON.parse(localStorage.getItem(LSPREFS) ?? "null");
+        // only overlay when the stored copy matches the current schema version
+        if (local && local?.version === p?.version) {
+          merged = deepMerge(p, local);
+        }
+      } catch { /* p stays */ }
+      setPrefs(merged);
+      applyAppearance(merged);
+      try { localStorage.setItem(LSPREFS, JSON.stringify(merged)); } catch {}
+      localStorage.setItem("piu.appearance", JSON.stringify((merged as any).appearance ?? {}));
+    }).catch(() => {});
     fetch("/api/ingest").then((r) => r.json()).then((s) => setAiConfigured(!!s.aiConfigured)).catch(() => {});
   }, []);
 
@@ -58,6 +83,7 @@ export function PrefsProvider({ children }: { children: React.ReactNode }) {
     const next = await res.json();
     setPrefs(next);
     applyAppearance(next);
+    try { localStorage.setItem(LSPREFS, JSON.stringify(next)); } catch { /* private mode etc. */ }
   }, [applyAppearance]);
 
   const action = useCallback(async (type: string, payload: Record<string, unknown> = {}) => {
@@ -66,6 +92,7 @@ export function PrefsProvider({ children }: { children: React.ReactNode }) {
     if (j?.prefs?.profileId) {
       setPrefs(j.prefs);
       applyAppearance(j.prefs);
+      try { localStorage.setItem(LSPREFS, JSON.stringify(j.prefs)); } catch { /* ignore */ }
     }
     if (!res.ok && j?.error?.formErrors) {
       toast(`Invalid input: ${Object.values(j.error.formErrors).flat().join(", ")}`, "error");

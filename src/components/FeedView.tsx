@@ -171,7 +171,9 @@ export function FeedView({ sectionId, title }: { sectionId: string; title: strin
             </div>
           </div>
         </div>
-        {lastIngest && <p className="text-[11px] text-zinc-400">Updated {new Date(lastIngest).toLocaleTimeString()}</p>}
+        {lastIngest && !Number.isNaN(Date.parse(lastIngest)) && (
+          <p className="text-[11px] text-zinc-400">Updated {new Date(lastIngest).toLocaleTimeString()}</p>
+        )}
         {menuOpen && isSch && <div className="h-36" />}
       </div>
 

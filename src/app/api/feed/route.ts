@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
     items: result.items.map(cardItem),
     total: result.total,
     totalBeforeFilters: result.totalBeforeFilters,
-    lastIngestAt: String(store.meta.lastIngest ?? null),
+    lastIngestAt: store.meta.lastIngest ?? null,
     sources: sourcesInfo(),
   });
 }

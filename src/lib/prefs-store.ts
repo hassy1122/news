@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import snapshotPrefsJson from "../../data/runtime/prefs/local.json";
 import { defaultPrefs, resetInterestPreferences } from "./prefs-defaults";
 import type { Prefs } from "./types";
 
@@ -18,14 +19,14 @@ let persistable = true;
 
 export async function loadPrefs(profileId = "local"): Promise<Prefs> {
   if (mem.has(profileId)) return mem.get(profileId)!;
+  let parsed: Partial<Prefs> = {};
   try {
-    const raw = await fs.readFile(path.join(P_DIR, `${profileId}.json`), "utf8");
-    const parsed = JSON.parse(raw);
-    const prefs = { ...defaultPrefs(profileId), ...parsed, notifications: { ...defaultPrefs(profileId).notifications, ...(parsed.notifications ?? {}) } };
-    mem.set(profileId, prefs);
+    parsed = JSON.parse(await fs.readFile(path.join(P_DIR, `${profileId}.json`), "utf8"));
   } catch {
-    mem.set(profileId, defaultPrefs(profileId));
+    // cold serverless instance → use the build-time snapshot (or fresh defaults)
+    parsed = profileId === "local" ? (snapshotPrefsJson as Partial<Prefs>) : {};
   }
+  mem.set(profileId, { ...defaultPrefs(profileId), ...parsed, notifications: { ...defaultPrefs(profileId).notifications, ...(parsed.notifications ?? {}) } });
   return mem.get(profileId)!;
 }
 

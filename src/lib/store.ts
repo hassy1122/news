@@ -1,6 +1,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
+// The committed store snapshot is statically imported so Vercel's build bundles
+// it into every serverless function — `fs`-loaded files are not traced.
+import snapshotJson from "../../data/runtime/store.json";
 
 /**
  * JSON file store — the local, zero-config database.
@@ -17,6 +20,9 @@ const DATA_DIR = path.join(process.cwd(), "data");
 const IS_SERVERLESS = process.env.VERCEL === "1";
 const STORE_DIR = IS_SERVERLESS ? path.join("/tmp", "personal-intel-runtime") : path.join(DATA_DIR, "runtime");
 const STORE_FILE = path.join(STORE_DIR, "store.json");
+
+// The repo snapshot committed by the scheduled refresh (GitHub Actions → git →
+// Vercel rebuild) is statically imported below — no runtime path needed.
 
 export interface StoreShape {
   version: 1;
@@ -51,15 +57,27 @@ let persistable = true;
 
 export async function loadAll(force = false): Promise<StoreShape> {
   if (cache && !force) return cache;
+  // 1st choice: live store (local dir or /tmp). 2nd: build-time snapshot.
+  // (On serverless the /tmp store wins per warm instance; snapshot covers cold starts.)
   try {
     const raw = await fs.readFile(STORE_FILE, "utf8");
-    const parsed = JSON.parse(raw) as Partial<StoreShape>;
-    cache = { ...EMPTY, ...parsed, items: parsed.items ?? {}, briefings: parsed.briefings ?? [], logs: parsed.logs ?? [], meta: parsed.meta ?? {} };
+    cache = normalizeStore(JSON.parse(raw) as Partial<StoreShape>);
+    return cache;
   } catch {
-    cache = { ...EMPTY };
-    cache.meta = { seeded: null };
+    /* fall through to the bundled snapshot */
   }
+  cache = normalizeStore(snapshotJson as Partial<StoreShape>);
   return cache;
+}
+
+function normalizeStore(parsed: Partial<StoreShape>): StoreShape {
+  return {
+    version: 1,
+    items: parsed.items ?? {},
+    briefings: parsed.briefings ?? [],
+    logs: parsed.logs ?? [],
+    meta: parsed.meta ?? { seeded: null },
+  };
 }
 
 export async function saveAll(mutate: (s: StoreShape) => void): Promise<void> {

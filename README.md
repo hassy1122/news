@@ -101,23 +101,24 @@ Supplying an unknown key never fabricates results: missing integrations are disa
 
 ## Deployment
 
-1. Push to GitHub → import into Vercel (or any Node host).
-2. Add env vars you want from the table above.
-3. `vercel.json` registers the daily 08:00 cron (Vercel Hobby allows crons once per day; for 15-min updates use the included GitHub Actions workflow — set repo variable `APP_URL` to your deployment URL, plus secret `CRON_SECRET` if you protect the endpoint).
+1. Push the repo to GitHub → import into Vercel (`vercel.com/new`, Next.js preset, defaults).
+2. Add env vars you want from the table above (none are required).
+3. On Vercel Hobby the `vercel.json` cron refreshes daily at 08:00. The **15-minute freshness loop** is the repo's GitHub Actions workflow: it runs ingestion every 15 minutes and commits the store snapshot (`data/runtime/`) — and since the repo is connected to Vercel, every push redeploys with the fresh snapshot baked in. No extra services, no tokens.
 4. Supplying an unknown key never fabricates results: missing integrations are disabled with an explicit setup note in the UI.
 
 ### Deploying to Vercel from GitHub (step by step)
 
 1. Go to [vercel.com/new](https://vercel.com/new), authorize GitHub, and select the `hassy1122/news` repository.
-2. Framework preset should auto-detect **Next.js**. Do not change the build commands — leave Root Directory empty, keep Install Command `npm install` (or `npm ci`), Build Command `next build`.
+2. Framework preset should auto-detect **Next.js**. Do not change build commands — leave Root Directory empty, Install Command `npm install`/`npm ci`, Build Command `next build`.
 3. Optional: expand **Environment Variables** and add any keys from **Optional credentials** above — the app deploys and runs correctly with none of them set.
-4. Click **Deploy**. The build takes ~1 minute. Vercel pulls and builds from `origin/main` (this repo also lives at <https://github.com/hassy1122/news>).
-5. Every future `git push` to `main` redeploys automatically.
+4. Click **Deploy**. The build takes ~1 minute.
+5. Every `git push` redeploys automatically — including the scheduled data commits from the `refresh` workflow.
+6. The GitHub `refresh` workflow is enabled by default (file in `.github/workflows/refresh.yml`) and needs no secrets.
 
 **How the deployed app behaves (honest notes):**
-- Serverless workspaces are read-only, so the deployed app stores runtime data in `/tmp/personal-intel-runtime`. This persists per warm instance — meaning live items, preferences and briefings can reset when a new instance spins up. On a single-user deployment a couple of taps on **Refresh** (or the daily cron) repopulates it.
-- For real durable storage on Vercel, wire the swap described in **Data & storage** (Supabase) — `src/lib/store.ts` and `src/lib/prefs-store.ts` are the only files to change.
-- The scholarship catalog seeds automatically on the first refresh; until then the more necessary action is a one-tap **Refresh** from the ⋯ menu.
+- Serverless workspaces are read-only, so the deployed app keeps its working data in `/tmp/personal-intel-runtime` and hydrates at cold start from the `data/runtime/` snapshot committed by the refresh workflow. Freshness is therefore bounded by the 15-min workflow + rebuild time (~2–3 min) rather than the full 15 min.
+- For a real multi-writer production database on Vercel, wire the swap described in **Data & storage** (Supabase) — `src/lib/store.ts` and `src/lib/prefs-store.ts` are the only files to change.
+- The scholarship catalog seeds automatically on the first refresh.
 
 ## Windows Task Scheduler (local worker on boot)
 

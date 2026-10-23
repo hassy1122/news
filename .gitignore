@@ -1,8 +1,9 @@
 node_modules/
 .next/
-data/
 .env
 .env.local
 *.tsbuildinfo
 next-env.d.ts
+*.lnk
+data/runtime/store.json.tmp
 *.lnk

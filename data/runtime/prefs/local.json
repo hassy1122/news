@@ -1,0 +1,111 @@
+{
+  "profileId": "local",
+  "version": 1,
+  "language": "en",
+  "timezone": "Asia/Karachi",
+  "briefingTime": "08:00",
+  "refreshMinutes": 15,
+  "sections": {
+    "topnews": {
+      "country": "PK",
+      "dailyQuantity": 5,
+      "sort": "latest"
+    },
+    "topit": {
+      "country": "PK",
+      "dailyQuantity": 5,
+      "sort": "latest"
+    },
+    "scholarships": {
+      "country": "PK",
+      "dailyQuantity": 5,
+      "sort": "latest"
+    },
+    "conferences": {
+      "country": "PK",
+      "dailyQuantity": 3,
+      "sort": "latest"
+    },
+    "internships": {
+      "country": "PK",
+      "dailyQuantity": 3,
+      "sort": "latest"
+    },
+    "jobs": {
+      "country": "PK",
+      "dailyQuantity": 3,
+      "sort": "latest"
+    },
+    "earnings": {
+      "country": "PK",
+      "dailyQuantity": 3,
+      "sort": "latest"
+    },
+    "business": {
+      "country": "PK",
+      "dailyQuantity": 3,
+      "sort": "latest"
+    },
+    "ai-tools": {
+      "country": "PK",
+      "dailyQuantity": 3,
+      "sort": "latest"
+    },
+    "courses": {
+      "country": "PK",
+      "dailyQuantity": 3,
+      "sort": "latest"
+    },
+    "hackathons": {
+      "country": "PK",
+      "dailyQuantity": 3,
+      "sort": "latest"
+    },
+    "opensource": {
+      "country": "PK",
+      "dailyQuantity": 3,
+      "sort": "latest"
+    },
+    "gov": {
+      "country": "PK",
+      "dailyQuantity": 3,
+      "sort": "latest"
+    },
+    "science": {
+      "country": "PK",
+      "dailyQuantity": 3,
+      "sort": "latest"
+    },
+    "finance": {
+      "country": "PK",
+      "dailyQuantity": 3,
+      "sort": "latest"
+    }
+  },
+  "interests": [],
+  "exclusions": [],
+  "customTopics": [],
+  "notifications": {
+    "enabled": false,
+    "permissionAsked": false,
+    "briefingAlert": false,
+    "importantNews": true,
+    "itOpportunities": true,
+    "scholarshipAlerts": true,
+    "deadlineReminders": true,
+    "topicMode": "selected",
+    "perInterestDefault": false,
+    "quietStart": "22:00",
+    "quietEnd": "07:00",
+    "maxPerHour": 4,
+    "maxPerDay": 24,
+    "emailEnabled": false
+  },
+  "notificationHistory": [],
+  "saved": [],
+  "feedback": [],
+  "appearance": {
+    "accent": "124 58 237",
+    "theme": "dark"
+  }
+}
