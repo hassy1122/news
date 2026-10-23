@@ -103,8 +103,21 @@ Supplying an unknown key never fabricates results: missing integrations are disa
 
 1. Push to GitHub → import into Vercel (or any Node host).
 2. Add env vars you want from the table above.
-3. `vercel.json` registers the 15-min cron (or use the GitHub Actions workflow).
+3. `vercel.json` registers the daily 08:00 cron (Vercel Hobby allows crons once per day; for 15-min updates use the included GitHub Actions workflow — set repo variable `APP_URL` to your deployment URL, plus secret `CRON_SECRET` if you protect the endpoint).
 4. Supplying an unknown key never fabricates results: missing integrations are disabled with an explicit setup note in the UI.
+
+### Deploying to Vercel from GitHub (step by step)
+
+1. Go to [vercel.com/new](https://vercel.com/new), authorize GitHub, and select the `hassy1122/news` repository.
+2. Framework preset should auto-detect **Next.js**. Do not change the build commands — leave Root Directory empty, keep Install Command `npm install` (or `npm ci`), Build Command `next build`.
+3. Optional: expand **Environment Variables** and add any keys from **Optional credentials** above — the app deploys and runs correctly with none of them set.
+4. Click **Deploy**. The build takes ~1 minute. Vercel pulls and builds from `origin/main` (this repo also lives at <https://github.com/hassy1122/news>).
+5. Every future `git push` to `main` redeploys automatically.
+
+**How the deployed app behaves (honest notes):**
+- Serverless workspaces are read-only, so the deployed app stores runtime data in `/tmp/personal-intel-runtime`. This persists per warm instance — meaning live items, preferences and briefings can reset when a new instance spins up. On a single-user deployment a couple of taps on **Refresh** (or the daily cron) repopulates it.
+- For real durable storage on Vercel, wire the swap described in **Data & storage** (Supabase) — `src/lib/store.ts` and `src/lib/prefs-store.ts` are the only files to change.
+- The scholarship catalog seeds automatically on the first refresh; until then the more necessary action is a one-tap **Refresh** from the ⋯ menu.
 
 ## Windows Task Scheduler (local worker on boot)
 

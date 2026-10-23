@@ -9,26 +9,39 @@ import type { Prefs } from "./types";
  * storage (with real accounts + row-level security) replaces only this file.
  */
 
-const P_DIR = path.join(process.cwd(), "data", "runtime", "prefs");
+const IS_SERVERLESS = process.env.VERCEL === "1";
+const P_DIR = IS_SERVERLESS ? path.join("/tmp", "personal-intel-runtime", "prefs") : path.join(process.cwd(), "data", "runtime", "prefs");
 
 const queue: Promise<unknown> = Promise.resolve();
+const mem = new Map<string, Prefs>();
+let persistable = true;
 
 export async function loadPrefs(profileId = "local"): Promise<Prefs> {
+  if (mem.has(profileId)) return mem.get(profileId)!;
   try {
     const raw = await fs.readFile(path.join(P_DIR, `${profileId}.json`), "utf8");
     const parsed = JSON.parse(raw);
-    return { ...defaultPrefs(profileId), ...parsed, notifications: { ...defaultPrefs(profileId).notifications, ...(parsed.notifications ?? {}) } };
+    const prefs = { ...defaultPrefs(profileId), ...parsed, notifications: { ...defaultPrefs(profileId).notifications, ...(parsed.notifications ?? {}) } };
+    mem.set(profileId, prefs);
   } catch {
-    return defaultPrefs(profileId);
+    mem.set(profileId, defaultPrefs(profileId));
   }
+  return mem.get(profileId)!;
 }
 
 export async function savePrefs(updater: (p: Prefs) => Prefs, profileId = "local"): Promise<Prefs> {
-  await queue;
+  void queue;
   const current = await loadPrefs(profileId);
   const next = updater(current);
-  await fs.mkdir(P_DIR, { recursive: true });
-  await fs.writeFile(path.join(P_DIR, `${profileId}.json`), JSON.stringify(next, null, 2), "utf8");
+  mem.set(profileId, next); // in-memory is authoritative even if disk writes fail
+  if (persistable) {
+    try {
+      await fs.mkdir(P_DIR, { recursive: true });
+      await fs.writeFile(path.join(P_DIR, `${profileId}.json`), JSON.stringify(next, null, 2), "utf8");
+    } catch {
+      persistable = false; // read-only runtime — keep session-only preferences
+    }
+  }
   return next;
 }
 

@@ -10,8 +10,13 @@ import crypto from "node:crypto";
  * Supabase (docs/schema.sql) touches only this file.
  */
 
-const DATA_DIR = path.join(process.cwd(), "data", "runtime");
-const STORE_FILE = path.join(DATA_DIR, "store.json");
+const DATA_DIR = path.join(process.cwd(), "data");
+
+// Serverless hosts (Vercel, Netlify…) mount the working directory read-only and
+// only expose /tmp as writable — persist there when deployed there.
+const IS_SERVERLESS = process.env.VERCEL === "1";
+const STORE_DIR = IS_SERVERLESS ? path.join("/tmp", "personal-intel-runtime") : path.join(DATA_DIR, "runtime");
+const STORE_FILE = path.join(STORE_DIR, "store.json");
 
 export interface StoreShape {
   version: 1;
@@ -36,8 +41,13 @@ let cache: StoreShape | null = null;
 let queue: Promise<unknown> = Promise.resolve();
 
 async function ensureDir() {
-  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.mkdir(STORE_DIR, { recursive: true });
 }
+
+/** false once a write proves the runtime directory is not writable — the store
+ *  then degrades to in-memory persistence for the lifetime of this process
+ *  (a deployed serverless function), which keeps every API call working. */
+let persistable = true;
 
 export async function loadAll(force = false): Promise<StoreShape> {
   if (cache && !force) return cache;
@@ -58,14 +68,19 @@ export async function saveAll(mutate: (s: StoreShape) => void): Promise<void> {
     mutate(s);
     if (s.logs.length > 300) s.logs = s.logs.slice(-300);
     if (s.briefings.length > 120) s.briefings = s.briefings.slice(-120);
-    await ensureDir();
-    const tmp = STORE_FILE + ".tmp";
-    await fs.writeFile(tmp, JSON.stringify(s), "utf8");
-    await fs.rename(tmp, STORE_FILE).catch(async () => {
-      // Windows occasionally denies rename on fresh locks — retry once
-      await fs.rename(tmp, STORE_FILE);
-    });
-    cache = s;
+    cache = s; // in-memory is authoritative even if disk writes fail
+    if (!persistable) return;
+    try {
+      await ensureDir();
+      const tmp = STORE_FILE + ".tmp";
+      await fs.writeFile(tmp, JSON.stringify(s), "utf8");
+      await fs.rename(tmp, STORE_FILE).catch(async () => {
+        // Windows occasionally denies rename on fresh locks — retry once
+        await fs.rename(tmp, STORE_FILE);
+      });
+    } catch {
+      persistable = false; // read-only runtime (e.g. serverless without /tmp)
+    }
   });
   try {
     await queue;
@@ -76,9 +91,15 @@ export async function saveAll(mutate: (s: StoreShape) => void): Promise<void> {
 }
 
 export async function wipe() {
-  await ensureDir();
-  await fs.writeFile(STORE_FILE, JSON.stringify(EMPTY), "utf8");
-  cache = null;
+  cache = { ...EMPTY };
+  cache.meta = { seeded: null };
+  if (!persistable) return;
+  try {
+    await ensureDir();
+    await fs.writeFile(STORE_FILE, JSON.stringify(cache), "utf8");
+  } catch {
+    persistable = false;
+  }
 }
 
 export function sha1(input: string): string {
