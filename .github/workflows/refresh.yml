@@ -1,0 +1,23 @@
+# Scheduled refresh (serverless): calls /api/cron/refresh every 15 minutes.
+# Free on GitHub Actions. Set repo secrets CRON_SECRET + APP_URL if configured.
+name: refresh
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call refresh endpoint
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -n "$APP_URL" ]; then
+            if [ -n "$CRON_SECRET" ]; then
+              curl -sS -f -H "x-cron-secret: $CRON_SECRET" "$APP_URL/api/cron/refresh" || true
+            else
+              curl -sS -f "$APP_URL/api/cron/refresh" || true
+            fi
+          fi

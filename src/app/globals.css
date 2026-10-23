@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --accent: 79 70 229; /* default indigo; overridden at runtime by prefs */
+}
+
+/* Text-size accessibility scale (html rem base) */
+html { font-size: 16px; }
+html[data-text="sm"] { font-size: 14px; }
+html[data-text="lg"] { font-size: 18px; }
+html[data-text="xl"] { font-size: 20px; }
+
+html, body { height: 100%; }
+body {
+  @apply bg-zinc-50 text-zinc-900 antialiased;
+}
+.dark body { @apply bg-zinc-950 text-zinc-100; }
+
+/* component primitives */
+@layer components {
+  .card { @apply rounded-2xl bg-white shadow-card dark:bg-zinc-900; }
+  .btn { @apply inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50; }
+  .btn-primary { @apply btn bg-accent text-white hover:brightness-110; }
+  .btn-ghost { @apply btn bg-transparent hover:bg-accent-soft text-accent; }
+  .chip { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium; }
+  .input { @apply w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100; }
+  .label { @apply mb-1 block text-sm font-medium text-zinc-600 dark:text-zinc-400; }
+  .skeleton { @apply rounded-lg bg-zinc-200 dark:bg-zinc-800; }
+}
+
+/* high contrast mode */
+html.high-contrast .card { box-shadow: 0 0 0 1px rgb(0 0 0/0.25); }
+html.high-contrast body { @apply text-black; }
+html.high-contrast.dark body { @apply text-white; }
+
+/* animations off */
+html.anim-none * { transition: none !important; animation: none !important; }
+
+/* Urdu content rendering (labels stay in English per spec) */
+.urdu { direction: rtl; unicode-bidi: isolate; line-height: 2; }
+
+/* subtle scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgb(113 113 122 / .4); border-radius: 8px; }
