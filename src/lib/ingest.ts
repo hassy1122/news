@@ -8,7 +8,7 @@ import { applyExpiry } from "./expiration";
 import { SCHOLARSHIP_SEEDS } from "./seed";
 import { importanceOf } from "./ranking";
 
-const UA = "PersonalIntel/1.0 (local personal digest; contact: local-user)";
+const UA = "Mozilla/5.0 (compatible; PersonalIntel/1.0; +https://github.com/hassy1122/news)";
 const TIMEOUT = 12_000;
 
 // ── small helpers ─────────────────────────────────────────────────────────
