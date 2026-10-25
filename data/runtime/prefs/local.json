@@ -22,62 +22,62 @@
       "sort": "latest"
     },
     "conferences": {
-      "country": "PK",
+      "country": "WW",
       "dailyQuantity": 3,
       "sort": "latest"
     },
     "internships": {
-      "country": "PK",
+      "country": "WW",
       "dailyQuantity": 3,
       "sort": "latest"
     },
     "jobs": {
-      "country": "PK",
+      "country": "WW",
       "dailyQuantity": 3,
       "sort": "latest"
     },
     "earnings": {
-      "country": "PK",
+      "country": "WW",
       "dailyQuantity": 3,
       "sort": "latest"
     },
     "business": {
-      "country": "PK",
+      "country": "WW",
       "dailyQuantity": 3,
       "sort": "latest"
     },
     "ai-tools": {
-      "country": "PK",
+      "country": "WW",
       "dailyQuantity": 3,
       "sort": "latest"
     },
     "courses": {
-      "country": "PK",
+      "country": "WW",
       "dailyQuantity": 3,
       "sort": "latest"
     },
     "hackathons": {
-      "country": "PK",
+      "country": "WW",
       "dailyQuantity": 3,
       "sort": "latest"
     },
     "opensource": {
-      "country": "PK",
+      "country": "WW",
       "dailyQuantity": 3,
       "sort": "latest"
     },
     "gov": {
-      "country": "PK",
+      "country": "WW",
       "dailyQuantity": 3,
       "sort": "latest"
     },
     "science": {
-      "country": "PK",
+      "country": "WW",
       "dailyQuantity": 3,
       "sort": "latest"
     },
     "finance": {
-      "country": "PK",
+      "country": "WW",
       "dailyQuantity": 3,
       "sort": "latest"
     }
@@ -107,5 +107,8 @@
   "appearance": {
     "accent": "124 58 237",
     "theme": "dark"
+  },
+  "migrations": {
+    "moreCountryWorldwide": true
   }
 }
