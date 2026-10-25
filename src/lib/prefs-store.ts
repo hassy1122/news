@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import snapshotPrefsJson from "../../data/runtime/prefs/local.json";
-import { defaultPrefs, resetInterestPreferences } from "./prefs-defaults";
+import { defaultPrefs, resetInterestPreferences, migrateMoreCountryWorldwide } from "./prefs-defaults";
 import type { Prefs } from "./types";
 
 /**
@@ -27,7 +27,23 @@ export async function loadPrefs(profileId = "local"): Promise<Prefs> {
     parsed = profileId === "local" ? (snapshotPrefsJson as Partial<Prefs>) : {};
   }
   mem.set(profileId, { ...defaultPrefs(profileId), ...parsed, notifications: { ...defaultPrefs(profileId).notifications, ...(parsed.notifications ?? {}) } });
-  return mem.get(profileId)!;
+  return applyMigrations(mem.get(profileId)!);
+}
+
+/** One-time corrections for profiles stored before a fix (flag-versioned). */
+function applyMigrations(p: Prefs): Prefs {
+  const next = migrateMoreCountryWorldwide(p);
+  if (next !== p && persistable) {
+    void (async () => {
+      try {
+        await fs.mkdir(P_DIR, { recursive: true });
+        await fs.writeFile(path.join(P_DIR, `${p.profileId}.json`), JSON.stringify(next, null, 2), "utf8");
+      } catch {
+        persistable = false;
+      }
+    })();
+  }
+  return next;
 }
 
 export async function savePrefs(updater: (p: Prefs) => Prefs, profileId = "local"): Promise<Prefs> {

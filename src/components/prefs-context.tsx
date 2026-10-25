@@ -2,6 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { Prefs, NewsItem } from "@/lib/types";
+import { migrateMoreCountryWorldwide } from "@/lib/prefs-defaults";
 
 interface PrefsCtx {
   prefs: Prefs | null; // null while loading
@@ -58,6 +59,7 @@ export function PrefsProvider({ children }: { children: React.ReactNode }) {
           merged = deepMerge(p, local);
         }
       } catch { /* p stays */ }
+      merged = migrateMoreCountryWorldwide(merged);
       setPrefs(merged);
       applyAppearance(merged);
       try { localStorage.setItem(LSPREFS, JSON.stringify(merged)); } catch {}

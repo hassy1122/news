@@ -64,3 +64,25 @@ export function defaultPrefs(profileId = "local"): Prefs {
 export function resetInterestPreferences(p: Prefs): Prefs {
   return { ...p, interests: [], exclusions: [] };
 }
+
+/** More-category section ids whose content is global (with the tabs excluded). */
+export const GLOBAL_MORE_SECTIONS = [
+  "conferences", "internships", "jobs", "earnings", "business", "ai-tools",
+  "courses", "hackathons", "opensource", "gov", "science", "finance",
+] as const;
+
+/**
+ * One-time correction for profiles stored before the More-tab coverage fix.
+ * Those sections defaulted to PK, but their items are worldwide — silently
+ * empty pages. Bump only that stale DEFAULT; set the flag so it never touches
+ * a country the visitor chose themselves afterwards.
+ */
+export function migrateMoreCountryWorldwide(p: Prefs): Prefs {
+  if (p.migrations?.moreCountryWorldwide) return p;
+  const next: Prefs = { ...p, migrations: { ...p.migrations, moreCountryWorldwide: true } };
+  for (const id of GLOBAL_MORE_SECTIONS) {
+    const sec = next.sections[id];
+    if (sec && sec.country === "PK") next.sections[id] = { ...sec, country: "WW" };
+  }
+  return next;
+}

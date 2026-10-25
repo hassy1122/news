@@ -214,4 +214,6 @@ export interface Prefs {
   notificationHistory: NotificationRecord[];
   saved: SavedItem[];
   feedback: FeedbackEntry[];
+  /** one-off data migrations already applied to this profile */
+  migrations?: Record<string, boolean>;
 }
