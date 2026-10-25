@@ -198,8 +198,10 @@ export const CONCEPTS: Concept[] = [
     includes: "MOOCs, free certifications, developer education programs",
     related: ["scholarship"],
     synonyms: [
-      "free course", "certification", "mooc", "learn online", "coursera", "edx",
+      "free course", "free courses", "online course", "online courses",
+      "free online course", "mooc", "learn online", "coursera", "edx",
       "udemy", "bootcamp", "certificate program", "free training",
+      "certification", "free certificate", "self-paced course", "study free",
     ],
     section: "it",
     boost: 0.55,
@@ -260,11 +262,14 @@ export const CONCEPTS: Concept[] = [
   {
     id: "govtech",
     label: "Government Programs & Public Opportunities",
-    includes: "Public schemes, e-governance, civic tech, official programs",
+    includes: "Public schemes, e-governance, civic tech, official programs, national digital services",
     related: ["politics"],
     synonyms: [
-      "government program", "public scheme", "e-governance", "digital pakistan",
-      "nadra", "passport", "bisp", "public portal", "citizen service", "govt initiative",
+      "government program", "public scheme", "e-governance", "govtech", "civic tech",
+      "digital service", "national portal", "visa system", "digital id", "govtech",
+      "digital pakistan", "nadra", "passport", "bisp", "public portal",
+      "citizen service", "govt initiative", "government scheme", "government app",
+      "sarkari", "public welfare", "government portal",
     ],
     section: "news",
     boost: 0.6,
@@ -326,8 +331,7 @@ export const CONCEPT_BY_ID = new Map<string, Concept>(CONCEPTS.map((c) => [c.id,
  * Section membership: which category feeds belong to which primary tab.
  * "More" categories reuse the same taxonomy ids.
  */
-export const FEED_CATEGORIES: Array<{
-  id: string;
+export const FEED_CATEGORIES: Array<{  id: string;
   section: "topnews" | "topit" | "scholarships";
   concepts: string[];
 }> = [
@@ -352,3 +356,8 @@ export const MORE_CATEGORIES: Array<{ id: string; concepts: string[]; kind?: str
   { id: "science", concepts: ["science"] },
   { id: "finance", concepts: ["economy", "finance"] },
 ];
+
+/** Every feed id the engine understands (tabs + More) in one lookup. */
+export const CATEGORY_BY_ID: Map<string, { concepts: string[] }> = new Map(
+  [...FEED_CATEGORIES, ...MORE_CATEGORIES].map((c) => [c.id, c]),
+);

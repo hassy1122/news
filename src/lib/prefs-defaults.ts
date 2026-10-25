@@ -18,19 +18,18 @@ export function defaultPrefs(profileId = "local"): Prefs {
       topnews: { country: DEFAULT_COUNTRY, dailyQuantity: 5, sort: "latest" },
       topit: { country: DEFAULT_COUNTRY, dailyQuantity: 5, sort: "latest" },
       scholarships: { country: DEFAULT_COUNTRY, dailyQuantity: 5, sort: "latest" },
-      // "More" category feeds persist independently:
-      conferences: { country: DEFAULT_COUNTRY, dailyQuantity: 3, sort: "latest" },
-      internships: { country: DEFAULT_COUNTRY, dailyQuantity: 3, sort: "latest" },
-      jobs: { country: DEFAULT_COUNTRY, dailyQuantity: 3, sort: "latest" },
-      earnings: { country: DEFAULT_COUNTRY, dailyQuantity: 3, sort: "latest" },
-      business: { country: DEFAULT_COUNTRY, dailyQuantity: 3, sort: "latest" },
-      "ai-tools": { country: DEFAULT_COUNTRY, dailyQuantity: 3, sort: "latest" },
-      courses: { country: DEFAULT_COUNTRY, dailyQuantity: 3, sort: "latest" },
-      hackathons: { country: DEFAULT_COUNTRY, dailyQuantity: 3, sort: "latest" },
-      opensource: { country: DEFAULT_COUNTRY, dailyQuantity: 3, sort: "latest" },
-      gov: { country: DEFAULT_COUNTRY, dailyQuantity: 3, sort: "latest" },
-      science: { country: DEFAULT_COUNTRY, dailyQuantity: 3, sort: "latest" },
-      finance: { country: DEFAULT_COUNTRY, dailyQuantity: 3, sort: "latest" },
+      // "More" category feeds persist independently. Their items are global
+      // (sources publish without country tags), so Worldwide is the honest
+      // default — a PK default would render empty pages. noIngest for these:
+      ...Object.fromEntries(
+        (
+          [
+            ["conferences", 3], ["internships", 3], ["jobs", 3], ["earnings", 3],
+            ["business", 3], ["ai-tools", 3], ["courses", 3], ["hackathons", 3],
+            ["opensource", 3], ["gov", 3], ["science", 3], ["finance", 3],
+          ] as Array<[string, number]>
+        ).map(([id, dq]) => [id, { country: "WW", dailyQuantity: dq, sort: "latest" }]),
+      ),
     },
     interests: [],
     exclusions: [],

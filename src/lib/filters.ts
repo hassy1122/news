@@ -3,7 +3,7 @@ import { applyPreferences, tokenize } from "./matching";
 import { sortItems, type SortMode } from "./ranking";
 import { isExpired } from "./expiration";
 import { isRegion } from "./countries";
-import { FEED_CATEGORIES } from "./taxonomy";
+import { CATEGORY_BY_ID } from "./taxonomy";
 
 /**
  * Feed query engine. Order of operations matters:
@@ -41,14 +41,13 @@ export interface FeedResult {
 }
 
 function inSection(item: NewsItem, section: string): boolean {
-  const cat = FEED_CATEGORIES.find((c) => c.id === section);
+  const cat = CATEGORY_BY_ID.get(section);
   if (cat) {
     return item.sections.includes(section) || item.categories.some((k) => cat.concepts.includes(k));
   }
-  // any other id = either a More category or a custom topic
+  // any other id = a custom topic
   if (item.sections.includes(section)) return true;
-  const c = section as string;
-  return item.categories.includes(c);
+  return item.categories.includes(section);
 }
 
 function geoMatch(item: NewsItem, country: string): boolean {
@@ -69,19 +68,27 @@ export function runFeed(store: { items: Record<string, NewsItem> }, prefs: Prefs
   const before = all.length;
   const now = Date.now();
 
-  // 1+2+3: expiry → membership → geo
+  // 1+2+3: expiry → membership → geo. For scholarships the country selector
+  // means the APPLICANT's country (nationality), not story geography, so the
+  // geo filter is skipped and the nationality rule below governs instead.
+  const country = params.country || prefs.sections[params.section]?.country || "WW";
   let pool = all.filter(
     (i) =>
       i.status === "active" &&
       !isExpired(i, now) &&
       params.section !== "all" &&
       inSection(i, params.section) &&
-      geoMatch(i, params.country || prefs.sections[params.section]?.country || "WW")
+      (params.section === "scholarships" ? true : geoMatch(i, country))
   );
 
-  // scholarship-specific filters (independent of the feed's country setting)
-  if (params.section === "scholarships" || (params.section as string) === "scholarships") {
-    if (params.nationality && params.nationality !== "WW") pool = pool.filter((i) => !i.availability || i.availability.eligibleNationalities === undefined || (i.availability.eligibleNationalities?.length ?? 0) === 0 || i.availability.eligibleNationalities.includes(params.nationality!));
+  // scholarship-specific filters (selector = applicant nationality)
+  if (params.section === "scholarships") {
+    const nat = params.nationality || country;
+    if (nat && nat !== "WW") {
+      pool = pool.filter(
+        (i) => !i.availability || i.availability.eligibleNationalities === undefined || (i.availability.eligibleNationalities?.length ?? 0) === 0 || i.availability.eligibleNationalities.includes(nat),
+      );
+    }
     if (params.destination && params.destination !== "WW") pool = pool.filter((i) => i.availability?.destinationCountry === params.destination);
     if (params.degreeLevel && params.degreeLevel !== "any") pool = pool.filter((i) => (i.availability?.degreeLevel ?? "").toLowerCase().includes(params.degreeLevel!.toLowerCase()));
     if (params.funding && params.funding !== "any") pool = pool.filter((i) => i.availability?.funding === params.funding);

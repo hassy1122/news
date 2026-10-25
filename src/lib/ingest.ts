@@ -58,12 +58,15 @@ function tagCountry(text: string, sourceDefault?: string): { country?: string; r
       return { country: code, regions };
     }
   }
-  if (sourceDefault === "PK") return { country: "PK", regions: ["south-asia"] };
+  if (sourceDefault) {
+    // Google News country editions etc. — the edition itself is the country.
+    return { country: sourceDefault, regions: sourceDefault === "PK" ? ["south-asia"] : [] };
+  }
   return { regions: [] };
 }
 
 // ── category mapping ──────────────────────────────────────────────────────
-const SECTIONS_BY_CONCEPT: Record<string, string[]> = {
+export const SECTIONS_BY_CONCEPT: Record<string, string[]> = {
   ai: ["topit"], ml: ["topit"], softdev: ["topit"], webdev: ["topit"], cyber: ["topit"],
   cloud: ["topit"], products: ["topit"], opensource: ["topit"], crypto: ["topit"],
   jobs: ["topit"], internships: ["topit"], hackathons: ["topit"], conferences: ["topit"],

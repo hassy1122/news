@@ -187,6 +187,13 @@ export function FeedView({ sectionId, title }: { sectionId: string; title: strin
           body="No item currently qualifies for this country, interest and exclusion combination — or the scheduled refresh hasn't completed. Tap Refresh, or try Worldwide."
         />
       )}
+      {!error && items && items.length === 0 && country !== "WW" && (
+        <div className="flex justify-center pb-3">
+          <button className="btn" onClick={() => setSection({ country: "WW" })}>
+            Show worldwide results instead
+          </button>
+        </div>
+      )}
       {!error && items && items.length > 0 && (
         <div className={`flex flex-col ${layout === "cards" ? "gap-2.5" : "gap-1.5"} px-3 pt-2`}>
           {items.map((it) =>
